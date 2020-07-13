@@ -33,7 +33,7 @@ resource "aws_subnet" "sub2" {
 resource "aws_security_group" "sg" {
   name        = "sgvpc"
   description = "Security group for VPC"
-  vpc_id      = "vpc-08573f955a01d00e0"
+  vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
     description = "SSH"
@@ -64,15 +64,52 @@ resource "aws_security_group" "sg" {
   }
 }
 
+resource "aws_security_group" "mysqlsg" {
+  name        = "mysqlsgvpc"
+  description = "Security group for MySql"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    description = "SSH"
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "mysqlmysg"
+  }
+}
+
 resource "aws_instance" "myin2" {
-    ami = "ami-0447a12f28fddb066"
+    ami = "ami-7e257211"
     instance_type = "t2.micro"
     associate_public_ip_address = true
     subnet_id = "${aws_subnet.sub1.id}"
     key_name = "myNewkey2"
-    vpc_security_group_ids = [ "sg-057447e817ee01dee"  ]
+    vpc_security_group_ids = [ "${aws_security_group.sg.id}"  ]
     tags = {
         Name = "LinuxWorld2"
+    }
+}
+
+resource "aws_instance" "mysql_inst" {
+    ami = "ami-07a8c73a650069cf3"
+    instance_type = "t2.micro"
+    associate_public_ip_address = true
+    subnet_id = "${aws_subnet.sub2.id}"
+    key_name = "myNewkey2"
+    vpc_security_group_ids = [ "${aws_security_group.mysqlsg.id}" ]
+    tags = {
+        Name = "Mysql_LinuxWorld"
     }
 }
 
